@@ -1,27 +1,57 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d16f5d5e-a083-4b61-9dfe-f01f399e3649" name="Changes" comment="" />
+    <list default="true" id="d16f5d5e-a083-4b61-9dfe-f01f399e3649" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/log4j.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/com/amit/LoadBalancer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/com/amit/ThreadTesting.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/com/amit/UpStreamManagement.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/log4j.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/layer4_lb.iml" beforeDir="false" afterPath="$PROJECT_DIR$/layer4_lb.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/layer4_lb/com/amit/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/layer4_lb/com/amit/Main.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/production/layer4_lb/com/amit/com/amit/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/out/production/layer4_lb/com/amit/com/amit/Main.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/com/amit/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/com/amit/Main.java" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProjectId" id="23x3UhB9gHuQtsmVhzkRnAqZxgX" />
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="flattenPackages" value="true" />
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="Downloaded.Files.Path.Enabled" value="true" />
+    <property name="Repository.Attach.Annotations" value="false" />
+    <property name="Repository.Attach.JavaDocs" value="true" />
+    <property name="Repository.Attach.Sources" value="false" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="project.structure.last.edited" value="Libraries" />
+    <property name="project.structure.proportion" value="0.15" />
+    <property name="project.structure.side.proportion" value="0.2" />
+    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="Application.ELB Run">
     <configuration name="ELB Run" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="com.amit.Main" />
       <module name="layer4_lb" />
@@ -29,6 +59,24 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="ThreadTesting" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.amit.ThreadTesting" />
+      <module name="layer4_lb" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.amit.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.ThreadTesting" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -51,5 +99,22 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/.." />
+    </ignored-roots>
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/com/amit/UpStreamManagement.java</url>
+          <line>84</line>
+          <option name="timeStamp" value="34" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
