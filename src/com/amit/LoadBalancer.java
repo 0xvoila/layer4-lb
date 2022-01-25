@@ -1,7 +1,7 @@
 package com.amit;
 
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -9,7 +9,6 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
-import java.sql.SQLSyntaxErrorException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
@@ -38,7 +37,6 @@ public class LoadBalancer extends Thread{
             attr.put("channel_type", "server");
             attr.put("back_connection", "");
             attr.put("last_used_time", java.time.Instant.now().getEpochSecond());
-
 
             SelectionKey selectionKey = serverSocket.register(selector, SelectionKey.OP_ACCEPT);
             selectionKey.attach(attr);
@@ -107,8 +105,10 @@ public class LoadBalancer extends Thread{
                                     logger.debug("15 seconds elapsed without any data transfer, terminating downstream connection");
                                     connection.close();
                                 }
-
-                                logger.debug("Client has stopped sending the data but not closed the connection");
+                                else{
+                                    logger.debug("Client has stopped sending the data but not closed the connection");
+                                }
+                                
                                 continue;
                             } else {
 
@@ -141,7 +141,9 @@ public class LoadBalancer extends Thread{
                                 }
                                 catch(Exception exception){
                                     clientSocket.close();
+                                    connection.close();
                                     logger.fatal("Unable to reach upstream server");
+                                    logger.warn("Closing server socket connection");
                                     logger.fatal(upStream.serverAddress + " " + upStream.serverPort);
                                     continue;
                                 }
