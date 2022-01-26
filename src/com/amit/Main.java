@@ -9,6 +9,8 @@ public class Main{
         upStreamManagementThread.start();
         Thread loadBalancerThread = new Thread(new LoadBalancer(upStreamManagement), "load_balancer_thread");
         loadBalancerThread.start();
+
+//        Thread healthCheckThread = new Thread(new LoadBalancer(upStreamManagement), "load_balancer_thread");
     }
 
 }

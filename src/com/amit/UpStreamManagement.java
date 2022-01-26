@@ -5,6 +5,7 @@ package com.amit;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -22,11 +23,11 @@ public class UpStreamManagement extends Thread{
 
     Condition  upStreamEmptyCondition = writeLock.newCondition();
 
-    public void addUpStream(String serverAddress, int serverPort){
+    public void addUpStream(String serverAddress, int serverPort, String healthCheckUrl){
 
         try{
             writeLock.lock();
-            UpStream newServer = new UpStream(serverAddress, serverPort);
+            UpStream newServer = new UpStream(serverAddress, serverPort, healthCheckUrl);
             if(upStreamFront == null){
                 upStreamFront = newServer;
                 upStreamRear = newServer;
@@ -75,6 +76,27 @@ public class UpStreamManagement extends Thread{
         }while ( temp != upStreamRear.next);
     }
 
+    public List<UpStream> getUpStreamList(){
+
+        List<UpStream> upStreamList = null;
+
+        try{
+            readLock.lock();
+
+            UpStream temp = upStreamFront;
+
+            do{
+                upStreamList.add(temp);
+                temp = temp.next;
+            }while(temp != upStreamRear);
+        }
+        finally {
+            readLock.unlock();
+        }
+
+        return upStreamList;
+    }
+
     public UpStream getNextUpStream() throws InterruptedException {
 
         UpStream nextUpStream = null;
@@ -100,9 +122,8 @@ public class UpStreamManagement extends Thread{
 
                 UpStream temp = upStreamFront;
 
-
                 do{
-                    if(temp.serverStatus != "CONNECTING"){
+                    if(temp.serverStatus == UpStreamStatus.CONNECTED){
                         nextUpStream = temp;
                         upStreamFront = temp.next;
                         upStreamRear = upStreamRear.next;
@@ -133,11 +154,11 @@ public class UpStreamManagement extends Thread{
             // Reading data using readLine
             try {
                 String[] serverURI = reader.readLine().split(" ");
-                if (serverURI[0].trim().equals("") || serverURI[1].trim().equals("")){
-                    System.out.println("UpStream format - <UPSTREAM_IP> <UPSTREAM_PORT>");
+                if (serverURI[0].trim().equals("") || serverURI[1].trim().equals("") || serverURI[2].trim().equals("")){
+                    System.out.println("UpStream format - <UPSTREAM_IP> <UPSTREAM_PORT> <HEALTH_CHECK_URL>");
                     continue;
                 }
-                addUpStream(serverURI[0], Integer.parseInt(serverURI[1]));
+                addUpStream(serverURI[0], Integer.parseInt(serverURI[1]), serverURI[2]);
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -149,13 +170,15 @@ public class UpStreamManagement extends Thread{
 class UpStream{
     String serverAddress;
     int serverPort;
-    String serverStatus;
+    UpStreamStatus serverStatus;
     UpStream next;
+    String healthCheckUrl;
 
-    UpStream(String serverAddress, int serverPort){
+    UpStream(String serverAddress, int serverPort, String healthCheckUrl){
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
-        this.serverStatus = "CONNECTED";
+        this.serverStatus = UpStreamStatus.CONNECTED;
+        this.healthCheckUrl = healthCheckUrl;
         this.next = null;
     }
 
@@ -163,7 +186,7 @@ class UpStream{
         this.serverAddress = serverAddress;
     }
 
-    public void setServerStatus(String serverStatus ){
+    public void setServerStatus(UpStreamStatus serverStatus ){
         this.serverStatus = serverStatus;
     }
 
@@ -174,7 +197,16 @@ class UpStream{
     public int getServerPort(){
         return this.serverPort;
     }
-    public String getServerStatus(){
+
+    public UpStreamStatus getServerStatus(){
         return this.serverStatus;
+    }
+
+    public String getHealthCheckUrl(){
+        return this.healthCheckUrl;
+    }
+
+    public void setHealthCheckUrl(String healthCheckUrl){
+        this.healthCheckUrl = healthCheckUrl;
     }
 }
