@@ -10,7 +10,8 @@ public class Main{
         Thread loadBalancerThread = new Thread(new LoadBalancer(upStreamManagement), "load_balancer_thread");
         loadBalancerThread.start();
 
-//        Thread healthCheckThread = new Thread(new LoadBalancer(upStreamManagement), "load_balancer_thread");
+        Thread healthCheckThread = new Thread(new UpStreamHealthMonitor(upStreamManagement), "upstream_monitoring_thread");
+        healthCheckThread.start();
     }
 
 }

@@ -5,6 +5,7 @@ package com.amit;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -23,11 +24,11 @@ public class UpStreamManagement extends Thread{
 
     Condition  upStreamEmptyCondition = writeLock.newCondition();
 
-    public void addUpStream(String serverAddress, int serverPort, String healthCheckUrl){
+    public void addUpStream(String serverAddress, int serverPort){
 
         try{
             writeLock.lock();
-            UpStream newServer = new UpStream(serverAddress, serverPort, healthCheckUrl);
+            UpStream newServer = new UpStream(serverAddress, serverPort);
             if(upStreamFront == null){
                 upStreamFront = newServer;
                 upStreamRear = newServer;
@@ -69,16 +70,25 @@ public class UpStreamManagement extends Thread{
 
     public void display(){
 
-        UpStream temp = upStreamFront;
-        do{
-            System.out.println(temp.serverAddress);
-            temp = temp.next;
-        }while ( temp != upStreamRear.next);
+        if(upStreamFront == null){
+            System.out.println("No upstream to monitor");
+        }
+        else{
+            UpStream temp = upStreamFront;
+            do{
+                System.out.println(temp.serverAddress + " " + temp.serverPort);
+                temp = temp.next;
+            }while ( temp != upStreamRear.next);
+        }
+
     }
 
     public List<UpStream> getUpStreamList(){
 
-        List<UpStream> upStreamList = null;
+        List<UpStream> upStreamList = new ArrayList<>();
+        if(upStreamFront == null){
+            return upStreamList;
+        }
 
         try{
             readLock.lock();
@@ -88,9 +98,10 @@ public class UpStreamManagement extends Thread{
             do{
                 upStreamList.add(temp);
                 temp = temp.next;
-            }while(temp != upStreamRear);
+            }while(temp != upStreamRear.next);
         }
         finally {
+
             readLock.unlock();
         }
 
@@ -99,34 +110,21 @@ public class UpStreamManagement extends Thread{
 
     public UpStream getNextUpStream() throws InterruptedException {
 
+        System.out.println("Getting next upstream");
         UpStream nextUpStream = null;
         readLock.lock();
 
         try {
-            if (upStreamFront == null) {
-                readLock.unlock();
-                System.out.println("Lock upgrading - Releasing read lock and upgrading write lock");
-                writeLock.lock();
-
-                try {
-                    while (upStreamFront == null) {
-                        System.out.println("No backend stream is present, going in idle state");
-                        upStreamEmptyCondition.await();
-                    }
-                    System.out.println("Thread has waken up");
-                } finally {
-                    writeLock.unlock();
-                    readLock.lock();
-                }
-            }   // If close
-
+               if(upStreamFront == null){
+                   return null;
+               }
                 UpStream temp = upStreamFront;
 
                 do{
                     if(temp.serverStatus == UpStreamStatus.CONNECTED){
                         nextUpStream = temp;
                         upStreamFront = temp.next;
-                        upStreamRear = upStreamRear.next;
+                        upStreamRear = temp;
                         break;
                     }
                     else{
@@ -140,10 +138,25 @@ public class UpStreamManagement extends Thread{
             readLock.unlock();
         }
 
+        System.out.println("Sending upstream is " + nextUpStream.serverAddress +  " " + nextUpStream.serverPort);
         return nextUpStream;
     }
 
+    public void updateStatus(UpStream upStream, UpStreamStatus status){
 
+        try{
+            writeLock.lock();
+            System.out.println("Updating the status, next upstream " + upStream.next.serverAddress + " " + upStream.next.serverPort);
+            upStream.setServerStatus(status);
+        }
+        catch(Exception exception){
+            System.out.println("Error in updating the status of the upsrtream");
+        }
+        finally {
+            writeLock.unlock();
+        }
+
+    }
     public void run(){
 
         while (true) {
@@ -154,11 +167,11 @@ public class UpStreamManagement extends Thread{
             // Reading data using readLine
             try {
                 String[] serverURI = reader.readLine().split(" ");
-                if (serverURI[0].trim().equals("") || serverURI[1].trim().equals("") || serverURI[2].trim().equals("")){
-                    System.out.println("UpStream format - <UPSTREAM_IP> <UPSTREAM_PORT> <HEALTH_CHECK_URL>");
+                if (serverURI[0].trim().equals("") || serverURI[1].trim().equals("")){
+                    System.out.println("UpStream format - <UPSTREAM_IP> <UPSTREAM_PORT>");
                     continue;
                 }
-                addUpStream(serverURI[0], Integer.parseInt(serverURI[1]), serverURI[2]);
+                addUpStream(serverURI[0], Integer.parseInt(serverURI[1]));
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -172,13 +185,11 @@ class UpStream{
     int serverPort;
     UpStreamStatus serverStatus;
     UpStream next;
-    String healthCheckUrl;
 
-    UpStream(String serverAddress, int serverPort, String healthCheckUrl){
+    UpStream(String serverAddress, int serverPort){
         this.serverAddress = serverAddress;
         this.serverPort = serverPort;
         this.serverStatus = UpStreamStatus.CONNECTED;
-        this.healthCheckUrl = healthCheckUrl;
         this.next = null;
     }
 
@@ -202,11 +213,4 @@ class UpStream{
         return this.serverStatus;
     }
 
-    public String getHealthCheckUrl(){
-        return this.healthCheckUrl;
-    }
-
-    public void setHealthCheckUrl(String healthCheckUrl){
-        this.healthCheckUrl = healthCheckUrl;
-    }
 }
