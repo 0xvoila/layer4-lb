@@ -42,6 +42,10 @@ public class UpStreamHealthMonitor extends Thread{
                             Boolean isConnected = clientSocket.connect(new InetSocketAddress(upStream.getServerAddress(), upStream.getServerPort()));
                             clientSocket.configureBlocking(false);
 
+                            if(upStream.serverStatus == UpStreamStatus.DISCONNECTED){
+                                upStreamManagement.updateStatus(upStream, UpStreamStatus.CONNECTED);
+                            }
+
                         }
                         catch(Exception exception){
                             System.out.println("Not connected " + upStream.serverAddress + " " + upStream.serverPort );

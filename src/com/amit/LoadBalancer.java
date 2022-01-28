@@ -179,12 +179,13 @@ public class LoadBalancer extends Thread{
                         SocketChannel connection = (SocketChannel) selectionKey.channel();
                         logger.info("Apache socket for readable " + connection);
                         ByteBuffer buffer = ByteBuffer.allocate(1024);
-                        logger.info("Data from apache is " + new String(buffer.array()));
 
                         try {
 
                             int bytesRead;
                             bytesRead = connection.read(buffer);
+
+
                             if (bytesRead < 0) {
 
                                 HashMap<String, Object> yy = (HashMap<String, Object>) selectionKey.attachment();
@@ -218,7 +219,8 @@ public class LoadBalancer extends Thread{
                                         conn = (SocketChannel) attr.get("back_connection");
 
                                         while (bytesRead > 0) {
-
+                                            logger.info("Number of bytes read is " + bytesRead);
+                                            logger.info("Data from apache is " + new String(buffer.array()));
                                             buffer.flip();
                                             conn.write(buffer);
                                             buffer.clear();
@@ -226,9 +228,8 @@ public class LoadBalancer extends Thread{
 
                                         }
 
-
                                         logger.info("Sending data back to " + conn);
-
+                                        conn.close();
 
                                     } else {
                                         logger.debug("No one to send data back");
