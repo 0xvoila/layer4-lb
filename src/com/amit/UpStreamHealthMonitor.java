@@ -2,13 +2,10 @@ package com.amit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
-import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.nio.channels.Selector;
 import java.nio.channels.SocketChannel;
 import java.util.List;
-import java.nio.channels.Selector;
+
 
 public class UpStreamHealthMonitor extends Thread{
 
@@ -70,8 +67,6 @@ public class UpStreamHealthMonitor extends Thread{
         catch(Exception exception){
             exception.printStackTrace();
         }
-
-
 
     }
 }
