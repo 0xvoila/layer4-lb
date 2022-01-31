@@ -2,6 +2,9 @@ package com.amit;
 
 //https://stackoverflow.com/questions/13088363/how-to-wait-for-data-with-reentrantreadwritelock
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,6 +17,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 
 public class UpStreamManagement extends Thread{
+
+    private static Logger logger = LogManager.getLogger(UpStreamManagement.class);
 
     public static UpStream upStreamFront = null;
     public static UpStream upStreamRear = null;
@@ -71,7 +76,7 @@ public class UpStreamManagement extends Thread{
     public void display(){
 
         if(upStreamFront == null){
-            System.out.println("No upstream to monitor");
+            logger.warn("No upsteam is added. Add upstream using stdin <UPSTREAM_IP> <SPACE> <UPSTREAM_PORT>");
         }
         else{
             UpStream temp = upStreamFront;
@@ -110,12 +115,12 @@ public class UpStreamManagement extends Thread{
 
     public UpStream getNextUpStream() throws InterruptedException {
 
-        System.out.println("Getting next upstream");
         UpStream nextUpStream = null;
         readLock.lock();
 
         try {
                if(upStreamFront == null){
+                   logger.warn("No upstream found to return to load balancer. It seems upstreams are not reachable");
                    return null;
                }
                 UpStream temp = upStreamFront;
@@ -138,7 +143,7 @@ public class UpStreamManagement extends Thread{
             readLock.unlock();
         }
 
-        System.out.println("Sending upstream is " + nextUpStream.serverAddress +  " " + nextUpStream.serverPort);
+        logger.debug("Sending upstream is " + nextUpStream.serverAddress +  " " + nextUpStream.serverPort);
         return nextUpStream;
     }
 
@@ -146,11 +151,11 @@ public class UpStreamManagement extends Thread{
 
         try{
             writeLock.lock();
-            System.out.println("Updating the status, next upstream " + upStream.next.serverAddress + " " + upStream.next.serverPort);
+            logger.warn("Upstream status change by health check " + upStream.serverAddress + " " + upStream.serverPort);
             upStream.setServerStatus(status);
         }
         catch(Exception exception){
-            System.out.println("Error in updating the status of the upsrtream");
+            logger.error("Error in updating the status of the upsrtream");
         }
         finally {
             writeLock.unlock();
@@ -168,7 +173,7 @@ public class UpStreamManagement extends Thread{
             try {
                 String[] serverURI = reader.readLine().split(" ");
                 if (serverURI[0].trim().equals("") || serverURI[1].trim().equals("")){
-                    System.out.println("UpStream format - <UPSTREAM_IP> <UPSTREAM_PORT>");
+                    logger.info("Add upstream from stdin in this format <UPSTREAM_IP> <UPSTREAM_PORT>");
                     continue;
                 }
                 addUpStream(serverURI[0], Integer.parseInt(serverURI[1]));

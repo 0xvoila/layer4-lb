@@ -1,5 +1,8 @@
 package com.amit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.channels.Selector;
@@ -11,13 +14,14 @@ public class UpStreamHealthMonitor extends Thread{
 
     UpStreamManagement upStreamManagement;
 
+    private static Logger logger = LogManager.getLogger(UpStreamHealthMonitor.class);
     public UpStreamHealthMonitor(UpStreamManagement upStreamManagement){
         this.upStreamManagement = upStreamManagement;
     }
     public void run()  {
 
         try{
-            System.out.println("Monitoring upstreams");
+            logger.info("Upstream health monitor service started");
 
             while(true){
 
@@ -38,7 +42,7 @@ public class UpStreamHealthMonitor extends Thread{
                     for (UpStream upStream : upStreamList){
                         try{
                             clientSocket = SocketChannel.open();
-                            System.out.println("Monitoring upstream " + upStream.serverPort + " " + upStream.serverStatus);
+                            logger.info("Checking health of upstream " + upStream.serverPort + " " + upStream.serverStatus);
                             Boolean isConnected = clientSocket.connect(new InetSocketAddress(upStream.getServerAddress(), upStream.getServerPort()));
                             clientSocket.configureBlocking(false);
 
@@ -48,7 +52,7 @@ public class UpStreamHealthMonitor extends Thread{
 
                         }
                         catch(Exception exception){
-                            System.out.println("Not connected " + upStream.serverAddress + " " + upStream.serverPort );
+                            logger.warn("Upstream not connected with load balancer " + upStream.serverAddress + " " + upStream.serverPort );
                             upStreamManagement.updateStatus(upStream, UpStreamStatus.DISCONNECTED);
                         }
                         finally {
@@ -56,6 +60,7 @@ public class UpStreamHealthMonitor extends Thread{
                         }
 
                     }
+                    logger.debug("Will check after 20 seconds again");
                     sleep(20000);
                 }
 
