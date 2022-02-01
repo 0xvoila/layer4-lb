@@ -34,8 +34,8 @@ public class LoadBalancer extends Thread{
             serverSocket.configureBlocking(false);
 
             HashMap<String, Object> attr = new HashMap<>();
-            attr.put("channel_type", "server");
-            attr.put("back_connection", "");
+            attr.put("channel_type", "down_stream");
+            attr.put("upstream_connection", "");
             attr.put("last_used_time", java.time.Instant.now().getEpochSecond());
 
             SelectionKey selectionKey = serverSocket.register(selector, SelectionKey.OP_ACCEPT);
@@ -47,35 +47,31 @@ public class LoadBalancer extends Thread{
                 selector.select();
                 Set<SelectionKey> selectionKeySet = selector.selectedKeys();
                 Iterator<SelectionKey> iter = selectionKeySet.iterator();
-                logger.info("Iterator set count is " + selectionKeySet.size());
                 while (iter.hasNext()) {
 
                     selectionKey = iter.next();
                     iter.remove();
                     String channelType = "";
 
-                    logger.info("Notification from " + selectionKey.channel());
-                    logger.info("Number of connections accepted are " + numberOfConnection);
-                    logger.info("Number of backstream connections accepted are " + numberOfBackStreamConnections);
 
                     if (selectionKey.isValid() && selectionKey.attachment() != null) {
                         attr = (HashMap) selectionKey.attachment();
                         channelType = (String) attr.get("channel_type");
-                        logger.info("attachment is " + attr);
-                        logger.info("Channel type is " + channelType);
 
                     }
 
-                    if (selectionKey.isValid() && selectionKey.isAcceptable() && channelType.equals("server")) {
-                        logger.info("Server Connection is accepted");
+                    if (selectionKey.isValid() && selectionKey.isAcceptable() && channelType.equals("down_stream")) {
+
+
+                        logger.info("down stream connection is accepted");
 
                         SocketChannel connection = serverSocket.accept();
                         numberOfConnection = numberOfConnection + 1;
                         connection.configureBlocking(false);
 
                         HashMap<String, Object> x = new HashMap<>();
-                        x.put("channel_type", "server");
-                        x.put("back_connection", "");
+                        x.put("channel_type", "down_stream");
+                        x.put("upstream_connection", "");
                         x.put("last_used_time", java.time.Instant.now().getEpochSecond());
 
 
@@ -84,9 +80,9 @@ public class LoadBalancer extends Thread{
                     }
 
 
-                    if (selectionKey.isValid() && selectionKey.isReadable() && channelType.equals("server")) {
+                    if (selectionKey.isValid() && selectionKey.isReadable() && channelType.equals("down_stream")) {
 
-                        logger.info("Server Channel is readable");
+                        logger.info("down stream channel is readable");
                         SocketChannel connection = (SocketChannel) selectionKey.channel();
                         ByteBuffer buffer = ByteBuffer.allocate(1024);
 
@@ -106,7 +102,7 @@ public class LoadBalancer extends Thread{
                                     connection.close();
                                 }
                                 else{
-                                    logger.debug("Client has stopped sending the data but not closed the connection");
+                                    logger.debug("down stream has stopped sending the data but not closed the connection");
                                 }
                                 
                                 continue;
@@ -120,8 +116,8 @@ public class LoadBalancer extends Thread{
                                 //After reading the request from downstream, make a connection with upstream
 
                                 HashMap<String, Object> attrClient = new HashMap<>();
-                                attrClient.put("channel_type", "client");
-                                attrClient.put("back_connection", connection);
+                                attrClient.put("channel_type", "upstream");
+                                attrClient.put("upstream_connection", connection);
                                 attrClient.put("last_used_time", java.time.Instant.now().getEpochSecond());
 
                                 SocketChannel clientSocket = null;
@@ -130,11 +126,11 @@ public class LoadBalancer extends Thread{
 
                                     //Here Get the upstream from UpStreamManagementService
                                     if(upStream == null){
-                                        logger.warn("No UpStream is available");
+                                        logger.warn("no upstream is available");
                                         continue;
                                     }
 
-                                    logger.debug("Upstream selected is " + upStream.serverAddress + ":" + upStream.serverPort);
+                                    logger.debug("upstream for next request to serve is " + upStream.serverAddress + ":" + upStream.serverPort);
                                     clientSocket = SocketChannel.open();
                                     clientSocket.connect(new InetSocketAddress(upStream.getServerAddress(), upStream.getServerPort()));
                                     clientSocket.configureBlocking(false);
@@ -143,17 +139,17 @@ public class LoadBalancer extends Thread{
                                     clientSocket.close();
                                     connection.close();
                                     logger.fatal("Unable to reach upstream server");
-                                    logger.warn("Closing server socket connection");
+                                    logger.warn("closing downstream socket connection");
+                                    logger.warn("closing upstream socket connection as well");
                                     logger.fatal(upStream.serverAddress + " " + upStream.serverPort);
                                     continue;
                                 }
 
                                 numberOfBackStreamConnections = numberOfConnection + 1;
-                                logger.debug("Apache socket is " + clientSocket);
                                 SelectionKey selectionKey2 = clientSocket.register(selector, SelectionKey.OP_READ);
                                 selectionKey2.attach(attrClient);
 
-                                logger.info("Downstream connection attached " + attrClient.get("back_connection"));
+                                logger.info("downstream connection overloaded on upstream " + attrClient.get("upstream_connection"));
 
                                 while (bytesRead > 0) {
 
@@ -173,11 +169,10 @@ public class LoadBalancer extends Thread{
 
                     }
 
-                    if (selectionKey.isValid() && selectionKey.isReadable() && channelType.equals("client")) {
+                    if (selectionKey.isValid() && selectionKey.isReadable() && channelType.equals("upstream")) {
 
-                        logger.info("Client Channel is readable");
+                        logger.info("upstream channel is readable");
                         SocketChannel connection = (SocketChannel) selectionKey.channel();
-                        logger.info("Apache socket for readable " + connection);
                         ByteBuffer buffer = ByteBuffer.allocate(1024);
 
                         try {
@@ -216,11 +211,11 @@ public class LoadBalancer extends Thread{
                                     if (selectionKey.attachment() != null) {
                                         attr = (HashMap<String, Object>) selectionKey.attachment();
                                         selectionKey.attach(null);
-                                        conn = (SocketChannel) attr.get("back_connection");
+                                        conn = (SocketChannel) attr.get("upstream_connection");
 
                                         while (bytesRead > 0) {
-                                            logger.info("Number of bytes read is " + bytesRead);
-                                            logger.info("Data from apache is " + new String(buffer.array()));
+                                            logger.info("number of bytes read is " + bytesRead);
+                                            logger.info("data from upstream is " + new String(buffer.array()));
                                             buffer.flip();
                                             conn.write(buffer);
                                             buffer.clear();
@@ -228,14 +223,14 @@ public class LoadBalancer extends Thread{
 
                                         }
 
-                                        logger.info("Sending data back to " + conn);
+                                        logger.info("sending data back to downstream connection " + conn);
                                         conn.close();
 
                                     } else {
-                                        logger.debug("No one to send data back");
+                                        logger.debug("no data to send back to downstream");
                                     }
                                 } catch (Exception exception) {
-                                    logger.error("Error while writing to client socket" + conn);
+                                    logger.error("error while writing to client socket" + conn);
                                     exception.printStackTrace();
                                     conn.close();
                                 }
@@ -243,15 +238,15 @@ public class LoadBalancer extends Thread{
                             }
                             connection.close();
                         } catch (Exception e) {
-                            logger.error("Exception while reading from apache connection" + connection);
+                            logger.error("Exception while reading from upstream connection" + connection);
                             e.printStackTrace();
                             connection.close();
 
-                            logger.error("If apache ReSET the connection, then ELB close the client connection");
+                            logger.error("upstream has reset the connection closing load balancer connection");
                             if (selectionKey.attachment() != null) {
                                 attr = (HashMap<String, Object>) selectionKey.attachment();
                                 selectionKey.attach(null);
-                                SocketChannel conn = (SocketChannel) attr.get("back_connection");
+                                SocketChannel conn = (SocketChannel) attr.get("upstream_connection");
                                 conn.close();
                             }
 
