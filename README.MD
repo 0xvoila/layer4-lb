@@ -21,3 +21,6 @@ Arogya has number of features incorporated based inspired from Elastic Load Bala
 4. Run maven clean and package command `mvn clean package`
 5. Run load balancer by `java -jar target/Layer4LB.jar`
 
+## Register a new upstream 
+As of now, we can register a new upstream from stdin like this **<UPSTREAM_IP> <SPACE> <UPSTREAM_PORT>** `192.34.23.12 80`
+
