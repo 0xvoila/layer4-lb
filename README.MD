@@ -4,7 +4,7 @@ Argoya is the layer 4 load balancer developed in Java. Arogya is non-blocking si
 Arogya has number of features incorporated based inspired from Elastic Load Balancer of AWS.
 
 
-##Features of the load balancer 
+## Features of the load balancer 
 1. Non-blocking, single threaded layer 4 load balancer
 2. Upstreams can be registered on a fly without reloading the load balancer
 3. Load Balancer automatically checks the health of the up streams at a particular interval of time
